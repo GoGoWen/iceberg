@@ -19,6 +19,7 @@
 package org.apache.iceberg.types;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -413,27 +414,103 @@ public class Types {
 
   public static class NestedField implements Serializable {
     public static NestedField optional(int id, String name, Type type) {
-      return new NestedField(true, id, name, type, null);
+      return new NestedField(true, id, name, type, null, null);
     }
 
     public static NestedField optional(int id, String name, Type type, String doc) {
-      return new NestedField(true, id, name, type, doc);
+      return new NestedField(true, id, name, type, doc, null);
+    }
+
+    public static NestedField optional(
+        int id, String name, Type type, String doc, Object defaultValue) {
+      return new NestedField(true, id, name, type, doc, defaultValue);
     }
 
     public static NestedField required(int id, String name, Type type) {
-      return new NestedField(false, id, name, type, null);
+      return new NestedField(false, id, name, type, null, null);
     }
 
     public static NestedField required(int id, String name, Type type, String doc) {
-      return new NestedField(false, id, name, type, doc);
+      return new NestedField(false, id, name, type, doc, null);
+    }
+
+    public static NestedField required(
+        int id, String name, Type type, String doc, Object defaultValue) {
+      return new NestedField(false, id, name, type, doc, defaultValue);
     }
 
     public static NestedField of(int id, boolean isOptional, String name, Type type) {
-      return new NestedField(isOptional, id, name, type, null);
+      return new NestedField(isOptional, id, name, type, null, null);
     }
 
     public static NestedField of(int id, boolean isOptional, String name, Type type, String doc) {
-      return new NestedField(isOptional, id, name, type, doc);
+      return new NestedField(isOptional, id, name, type, doc, null);
+    }
+
+    public static NestedField of(
+        int id, boolean isOptional, String name, Type type, String doc, Object defaultValue) {
+      return new NestedField(isOptional, id, name, type, doc, defaultValue);
+    }
+
+    private static void validateDefaultValue(Object defaultValue, Type type) {
+      if (defaultValue == null) {
+        return;
+      }
+      switch (type.typeId()) {
+        case STRUCT:
+          Preconditions.checkArgument(
+              Map.class.isInstance(defaultValue),
+              "defaultValue should be a Map from field names to values for StructType");
+          if (defaultValue == null) {
+            return;
+          }
+          Map<String, Object> defaultStruct = (Map<String, Object>) defaultValue;
+          Preconditions.checkArgument(defaultStruct.size() == type.asStructType().fields().size());
+          for (String fieldName : defaultStruct.keySet()) {
+            NestedField.validateDefaultValue(
+                defaultStruct.get(fieldName), type.asStructType().field(fieldName).type);
+          }
+          break;
+        case LIST:
+          Preconditions.checkArgument(
+              defaultValue instanceof ArrayList,
+              "defaultValue should be an ArrayList of Objects, for ListType");
+          List<Object> defaultArrayList = (ArrayList<Object>) defaultValue;
+          if (defaultArrayList == null || defaultArrayList.size() == 0) {
+            return;
+          }
+          defaultArrayList.forEach(
+              dv -> NestedField.validateDefaultValue(dv, type.asListType().elementField.type));
+          break;
+        case MAP:
+          Preconditions.checkArgument(
+              Map.class.isInstance(defaultValue),
+              "defaultValue should be an instance of Map for MapType");
+          Map<Object, Object> defaultMap = (Map<Object, Object>) defaultValue;
+          if (defaultMap == null || defaultMap.isEmpty()) {
+            return;
+          }
+          for (Map.Entry e : defaultMap.entrySet()) {
+            NestedField.validateDefaultValue(e.getKey(), type.asMapType().keyField.type);
+            NestedField.validateDefaultValue(e.getValue(), type.asMapType().valueField.type);
+          }
+          break;
+        case FIXED:
+        case BINARY:
+          Preconditions.checkArgument(
+              byte[].class.isInstance(defaultValue),
+              "defaultValue should be an instance of byte[] for TypeId.%s, but defaultValue.class = %s",
+              type.typeId().name(),
+              defaultValue.getClass().getCanonicalName());
+          break;
+        default:
+          Preconditions.checkArgument(
+              type.typeId().javaClass().isInstance(defaultValue),
+              "defaultValue should be and instance of %s for TypeId.%s, but defaultValue.class = %s",
+              type.typeId().javaClass(),
+              type.typeId().name(),
+              defaultValue.getClass().getCanonicalName());
+      }
     }
 
     private final boolean isOptional;
@@ -441,15 +518,19 @@ public class Types {
     private final String name;
     private final Type type;
     private final String doc;
+    private final Object defaultValue;
 
-    private NestedField(boolean isOptional, int id, String name, Type type, String doc) {
+    private NestedField(
+        boolean isOptional, int id, String name, Type type, String doc, Object defaultValue) {
       Preconditions.checkNotNull(name, "Name cannot be null");
       Preconditions.checkNotNull(type, "Type cannot be null");
+      validateDefaultValue(defaultValue, type);
       this.isOptional = isOptional;
       this.id = id;
       this.name = name;
       this.type = type;
       this.doc = doc;
+      this.defaultValue = defaultValue;
     }
 
     public boolean isOptional() {
@@ -460,7 +541,7 @@ public class Types {
       if (isOptional) {
         return this;
       }
-      return new NestedField(true, id, name, type, doc);
+      return new NestedField(true, id, name, type, doc, defaultValue);
     }
 
     public boolean isRequired() {
@@ -471,7 +552,7 @@ public class Types {
       if (!isOptional) {
         return this;
       }
-      return new NestedField(false, id, name, type, doc);
+      return new NestedField(false, id, name, type, doc, defaultValue);
     }
 
     public int fieldId() {
@@ -490,9 +571,18 @@ public class Types {
       return doc;
     }
 
+    public boolean hasDefaultValue() {
+      return defaultValue != null;
+    }
+
+    public Object getDefaultValue() {
+      return defaultValue;
+    }
+
     @Override
     public String toString() {
       return String.format("%d: %s: %s %s", id, name, isOptional ? "optional" : "required", type)
+          + (hasDefaultValue() ? ", default value: " + defaultValue + ", " : "")
           + (doc != null ? " (" + doc + ")" : "");
     }
 
@@ -513,13 +603,17 @@ public class Types {
         return false;
       } else if (!Objects.equals(doc, that.doc)) {
         return false;
+      } else if (!Objects.equals(defaultValue, that.defaultValue)) {
+        return false;
       }
       return type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(NestedField.class, id, isOptional, name, type);
+      return hasDefaultValue()
+          ? Objects.hash(NestedField.class, id, isOptional, name, type, defaultValue)
+          : Objects.hash(NestedField.class, id, isOptional, name, type);
     }
   }
 

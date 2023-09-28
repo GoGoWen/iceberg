@@ -406,6 +406,10 @@ acceptedBreaks:
       justification: "Removing deprecations for 1.2.0"
   "1.2.0":
     org.apache.iceberg:iceberg-api:
+    - code: "java.class.defaultSerializationChanged"
+      old: "class org.apache.iceberg.types.Types.NestedField"
+      new: "class org.apache.iceberg.types.Types.NestedField"
+      justification: "support default value"
     - code: "java.field.constantValueChanged"
       old: "field org.apache.iceberg.actions.RewriteDataFiles.MAX_CONCURRENT_FILE_GROUP_REWRITES_DEFAULT"
       new: "field org.apache.iceberg.actions.RewriteDataFiles.MAX_CONCURRENT_FILE_GROUP_REWRITES_DEFAULT"
@@ -421,6 +425,22 @@ acceptedBreaks:
       new: "method java.util.List<org.apache.iceberg.actions.RewritePositionDeleteFiles.FileGroupRewriteResult>\
         \ org.apache.iceberg.actions.RewritePositionDeleteFiles.Result::rewriteResults()"
       justification: "New method added to un-implemented interface"
+    - code: "java.method.addedToInterface"
+      new: "method org.apache.iceberg.UpdateSchema org.apache.iceberg.UpdateSchema::addColumn(java.lang.String,\
+        \ java.lang.String, org.apache.iceberg.types.Type, java.lang.String, java.lang.Object)"
+      justification: "OK"
+    - code: "java.method.addedToInterface"
+      new: "method org.apache.iceberg.UpdateSchema org.apache.iceberg.UpdateSchema::addColumn(java.lang.String,\
+        \ org.apache.iceberg.types.Type, java.lang.String, java.lang.Object)"
+      justification: "OK"
+    - code: "java.method.addedToInterface"
+      new: "method org.apache.iceberg.UpdateSchema org.apache.iceberg.UpdateSchema::addRequiredColumn(java.lang.String,\
+        \ java.lang.String, org.apache.iceberg.types.Type, java.lang.String, java.lang.Object)"
+      justification: "OK"
+    - code: "java.method.addedToInterface"
+      new: "method org.apache.iceberg.UpdateSchema org.apache.iceberg.UpdateSchema::addRequiredColumn(java.lang.String,\
+        \ org.apache.iceberg.types.Type, java.lang.String, java.lang.Object)"
+      justification: "OK"
     - code: "java.method.removed"
       old: "method java.lang.Integer org.apache.iceberg.view.ImmutableSQLViewRepresentation::schemaId()"
       justification: "Moving SchemaID to ViewVersion. View Spec implementation has\

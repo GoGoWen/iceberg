@@ -123,7 +123,7 @@ class TypeToSchema extends TypeUtil.SchemaVisitor<Schema> {
   @Override
   public Schema field(Types.NestedField field, Schema fieldSchema) {
     if (field.isOptional()) {
-      return AvroSchemaUtil.toOption(fieldSchema);
+      return AvroSchemaUtil.toOption(fieldSchema, field.hasDefaultValue());
     } else {
       return fieldSchema;
     }

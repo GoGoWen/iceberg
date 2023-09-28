@@ -81,7 +81,27 @@ public interface UpdateSchema extends PendingUpdate<Schema> {
    * @return this for method chaining
    * @throws IllegalArgumentException If name contains "."
    */
-  UpdateSchema addColumn(String name, Type type, String doc);
+  default UpdateSchema addColumn(String name, Type type, String doc) {
+    return addColumn(name, type, doc, null);
+  }
+
+  /**
+   * Add a new top-level column.
+   *
+   * <p>Because "." may be interpreted as a column path separator or may be used in field names, it
+   * is not allowed in names passed to this method. To add to nested structures or to add fields
+   * with names that contain ".", use {@link #addColumn(String, String, Type)}.
+   *
+   * <p>If type is a nested type, its field IDs are reassigned when added to the existing schema.
+   *
+   * @param name name for the new column
+   * @param type type for the new column
+   * @param doc documentation string for the new column
+   * @param defaultValue default value for the new column
+   * @return this for method chaining
+   * @throws IllegalArgumentException If name contains "."
+   */
+  UpdateSchema addColumn(String name, Type type, String doc, Object defaultValue);
 
   /**
    * Add a new column to a nested struct.
@@ -128,7 +148,33 @@ public interface UpdateSchema extends PendingUpdate<Schema> {
    * @return this for method chaining
    * @throws IllegalArgumentException If parent doesn't identify a struct
    */
-  UpdateSchema addColumn(String parent, String name, Type type, String doc);
+  default UpdateSchema addColumn(String parent, String name, Type type, String doc) {
+    return addColumn(parent, name, type, doc, null);
+  }
+
+  /**
+   * Add a new column to a nested struct.
+   *
+   * <p>The parent name is used to find the parent using {@link Schema#findField(String)}. If the
+   * parent name is null, the new column will be added to the root as a top-level column. If parent
+   * identifies a struct, a new column is added to that struct. If it identifies a list, the column
+   * is added to the list element struct, and if it identifies a map, the new column is added to the
+   * map's value struct.
+   *
+   * <p>The given name is used to name the new column and names containing "." are not handled
+   * differently.
+   *
+   * <p>If type is a nested type, its field IDs are reassigned when added to the existing schema.
+   *
+   * @param parent name of the parent struct to the column will be added to
+   * @param name name for the new column
+   * @param type type for the new column
+   * @param doc documentation string for the new column
+   * @param defaultValue default value for the new column
+   * @return this for method chaining
+   * @throws IllegalArgumentException If parent doesn't identify a struct
+   */
+  UpdateSchema addColumn(String parent, String name, Type type, String doc, Object defaultValue);
 
   /**
    * Add a new required top-level column.
@@ -169,7 +215,30 @@ public interface UpdateSchema extends PendingUpdate<Schema> {
    * @return this for method chaining
    * @throws IllegalArgumentException If name contains "."
    */
-  UpdateSchema addRequiredColumn(String name, Type type, String doc);
+  default UpdateSchema addRequiredColumn(String name, Type type, String doc) {
+    return addRequiredColumn(name, type, doc, null);
+  }
+
+  /**
+   * Add a new required top-level column.
+   *
+   * <p>This is an incompatible change that can break reading older data. This method will result in
+   * an exception unless {@link #allowIncompatibleChanges()} has been called.
+   *
+   * <p>Because "." may be interpreted as a column path separator or may be used in field names, it
+   * is not allowed in names passed to this method. To add to nested structures or to add fields
+   * with names that contain ".", use {@link #addRequiredColumn(String, String, Type)}.
+   *
+   * <p>If type is a nested type, its field IDs are reassigned when added to the existing schema.
+   *
+   * @param name name for the new column
+   * @param type type for the new column
+   * @param doc documentation string for the new column
+   * @param defaultValue documentation string for the new column
+   * @return this for method chaining
+   * @throws IllegalArgumentException If name contains "."
+   */
+  UpdateSchema addRequiredColumn(String name, Type type, String doc, Object defaultValue);
 
   /**
    * Add a new required top-level column.
@@ -222,7 +291,37 @@ public interface UpdateSchema extends PendingUpdate<Schema> {
    * @return this for method chaining
    * @throws IllegalArgumentException If parent doesn't identify a struct
    */
-  UpdateSchema addRequiredColumn(String parent, String name, Type type, String doc);
+  default UpdateSchema addRequiredColumn(String parent, String name, Type type, String doc) {
+    return addRequiredColumn(parent, name, type, doc, null);
+  }
+
+  /**
+   * Add a new required top-level column.
+   *
+   * <p>This is an incompatible change that can break reading older data. This method will result in
+   * an exception unless {@link #allowIncompatibleChanges()} has been called.
+   *
+   * <p>The parent name is used to find the parent using {@link Schema#findField(String)}. If the
+   * parent name is null, the new column will be added to the root as a top-level column. If parent
+   * identifies a struct, a new column is added to that struct. If it identifies a list, the column
+   * is added to the list element struct, and if it identifies a map, the new column is added to the
+   * map's value struct.
+   *
+   * <p>The given name is used to name the new column and names containing "." are not handled
+   * differently.
+   *
+   * <p>If type is a nested type, its field IDs are reassigned when added to the existing schema.
+   *
+   * @param parent name of the parent struct to the column will be added to
+   * @param name name for the new column
+   * @param type type for the new column
+   * @param doc documentation string for the new column
+   * @param defaultValue default value for the new column
+   * @return this for method chaining
+   * @throws IllegalArgumentException If parent doesn't identify a struct
+   */
+  UpdateSchema addRequiredColumn(
+      String parent, String name, Type type, String doc, Object defaultValue);
 
   /**
    * Rename a column in the schema.

@@ -67,6 +67,9 @@ class TypeToSparkType extends TypeUtil.SchemaVisitor<DataType> {
       if (field.doc() != null) {
         sparkField = sparkField.withComment(field.doc());
       }
+      if (field.hasDefaultValue()) {
+        sparkField = sparkField.withCurrentDefaultValue(field.getDefaultValue().toString());
+      }
       sparkFields.add(sparkField);
     }
 

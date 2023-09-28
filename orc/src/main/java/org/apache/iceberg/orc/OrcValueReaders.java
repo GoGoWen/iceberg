@@ -155,6 +155,9 @@ public class OrcValueReaders {
           // in case of any other metadata field, fill with nulls
           this.isConstantOrMetadataField[pos] = true;
           this.readers[pos] = constants(null);
+        } else if (field.hasDefaultValue()) {
+          this.isConstantOrMetadataField[pos] = true;
+          this.readers[pos] = constants(field.getDefaultValue());
         } else {
           this.readers[pos] = readers.get(readerIndex++);
         }

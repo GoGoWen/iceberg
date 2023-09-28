@@ -99,12 +99,28 @@ class SchemaUpdate implements UpdateSchema {
         !name.contains("."),
         "Cannot add column with ambiguous name: %s, use addColumn(parent, name, type)",
         name);
-    return addColumn(null, name, type, doc);
+    return addColumn(null, name, type, doc, null);
+  }
+
+  @Override
+  public UpdateSchema addColumn(String name, Type type, String doc, Object defaultValue) {
+    Preconditions.checkArgument(
+        !name.contains("."),
+        "Cannot add column with ambiguous name: %s, use addColumn(parent, name, type)",
+        name);
+    return addColumn(null, name, type, doc, defaultValue);
   }
 
   @Override
   public UpdateSchema addColumn(String parent, String name, Type type, String doc) {
-    internalAddColumn(parent, name, true, type, doc);
+    internalAddColumn(parent, name, true, type, doc, null);
+    return this;
+  }
+
+  @Override
+  public UpdateSchema addColumn(
+      String parent, String name, Type type, String doc, Object defaultValue) {
+    internalAddColumn(parent, name, true, type, doc, defaultValue);
     return this;
   }
 
@@ -119,15 +135,34 @@ class SchemaUpdate implements UpdateSchema {
   }
 
   @Override
+  public UpdateSchema addRequiredColumn(String name, Type type, String doc, Object defaultValue) {
+    Preconditions.checkArgument(
+        !name.contains("."),
+        "Cannot add column with ambiguous name: %s, use addColumn(parent, name, type)",
+        name);
+    addRequiredColumn(null, name, type, doc, defaultValue);
+    return this;
+  }
+
+  @Override
   public UpdateSchema addRequiredColumn(String parent, String name, Type type, String doc) {
     Preconditions.checkArgument(
         allowIncompatibleChanges, "Incompatible change: cannot add required column: %s", name);
-    internalAddColumn(parent, name, false, type, doc);
+    internalAddColumn(parent, name, false, type, doc, null);
+    return this;
+  }
+
+  @Override
+  public UpdateSchema addRequiredColumn(
+      String parent, String name, Type type, String doc, Object defaultValue) {
+    Preconditions.checkArgument(
+        allowIncompatibleChanges, "Incompatible change: cannot add required column: %s", name);
+    internalAddColumn(parent, name, false, type, doc, defaultValue);
     return this;
   }
 
   private void internalAddColumn(
-      String parent, String name, boolean isOptional, Type type, String doc) {
+      String parent, String name, boolean isOptional, Type type, String doc, Object defaultValue) {
     int parentId = TABLE_ROOT_ID;
     String fullName;
     if (parent != null) {
@@ -180,7 +215,12 @@ class SchemaUpdate implements UpdateSchema {
     adds.put(
         parentId,
         Types.NestedField.of(
-            newId, isOptional, name, TypeUtil.assignFreshIds(type, this::assignNewColumnId), doc));
+            newId,
+            isOptional,
+            name,
+            TypeUtil.assignFreshIds(type, this::assignNewColumnId),
+            doc,
+            defaultValue));
   }
 
   @Override

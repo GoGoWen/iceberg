@@ -82,11 +82,13 @@ class SparkTypeToType extends SparkTypeVisitor<Type> {
       }
 
       String doc = field.getComment().isDefined() ? field.getComment().get() : null;
+      Object defaultValue =
+          field.getCurrentDefaultValue().isDefined() ? field.getCurrentDefaultValue().get() : null;
 
       if (field.nullable()) {
-        newFields.add(Types.NestedField.optional(id, field.name(), type, doc));
+        newFields.add(Types.NestedField.optional(id, field.name(), type, doc, defaultValue));
       } else {
-        newFields.add(Types.NestedField.required(id, field.name(), type, doc));
+        newFields.add(Types.NestedField.required(id, field.name(), type, doc, defaultValue));
       }
     }
 

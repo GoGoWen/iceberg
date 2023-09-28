@@ -172,6 +172,9 @@ public abstract class BaseParquetReaders<T> {
           if (reader != null) {
             reorderedFields.add(reader);
             types.add(typesById.get(id));
+          } else if (field.hasDefaultValue()) {
+            reorderedFields.add(ParquetValueReaders.constant(field.getDefaultValue()));
+            types.add(null);
           } else {
             reorderedFields.add(ParquetValueReaders.nulls());
             types.add(null);
