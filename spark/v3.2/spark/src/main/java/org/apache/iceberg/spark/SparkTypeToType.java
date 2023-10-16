@@ -144,7 +144,9 @@ class SparkTypeToType extends SparkTypeVisitor<Type> {
       return Types.DateType.get();
 
     } else if (atomic instanceof TimestampType) {
-      return Types.TimestampType.withZone();
+      // Bowen - change to withoutZone as we do not use zone
+      // return Types.TimestampType.withZone();
+      return Types.TimestampType.withoutZone();
 
     } else if (atomic instanceof DecimalType) {
       return Types.DecimalType.of(
