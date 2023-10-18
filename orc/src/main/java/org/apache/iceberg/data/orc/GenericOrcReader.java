@@ -80,6 +80,15 @@ public class GenericOrcReader implements OrcRowReader<Record> {
     }
 
     @Override
+    public OrcValueReader<?> record(
+        Types.StructType expected,
+        TypeDescription record,
+        List<String> names,
+        Map<Integer, OrcValueReader<?>> fields) {
+      return GenericOrcReaders.struct(fields, expected, idToConstant);
+    }
+
+    @Override
     public OrcValueReader<?> list(
         Types.ListType iList, TypeDescription array, OrcValueReader<?> elementReader) {
       return GenericOrcReaders.array(elementReader);

@@ -19,6 +19,7 @@
 package org.apache.iceberg.data.orc;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.apache.iceberg.FieldMetrics;
 import org.apache.iceberg.Schema;
@@ -28,6 +29,7 @@ import org.apache.iceberg.orc.OrcRowWriter;
 import org.apache.iceberg.orc.OrcSchemaWithTypeVisitor;
 import org.apache.iceberg.orc.OrcValueWriter;
 import org.apache.iceberg.relocated.com.google.common.base.Preconditions;
+import org.apache.iceberg.relocated.com.google.common.collect.Lists;
 import org.apache.iceberg.types.Type;
 import org.apache.iceberg.types.Types;
 import org.apache.orc.TypeDescription;
@@ -61,6 +63,15 @@ public class GenericOrcWriter implements OrcRowWriter<Record> {
         List<String> names,
         List<OrcValueWriter<?>> fields) {
       return new RecordWriter(fields);
+    }
+
+    @Override
+    public OrcValueWriter<Record> record(
+        Types.StructType iStruct,
+        TypeDescription record,
+        List<String> names,
+        Map<Integer, OrcValueWriter<?>> fields) {
+      return new RecordWriter(Lists.newArrayList(fields.values().iterator()));
     }
 
     @Override

@@ -273,20 +273,17 @@ public final class ORCSchemaUtil {
       case STRUCT:
         orcType = TypeDescription.createStruct();
         for (Types.NestedField nestedField : type.asStructType().fields()) {
-          // Using suffix _r to avoid potential underlying issues in ORC reader
-          // with reused column names between ORC and Iceberg;
-          // e.g. renaming column c -> d and adding new column d
-          String name =
-              Optional.ofNullable(mapping.get(nestedField.fieldId()))
-                  .map(OrcField::name)
-                  .orElseGet(() -> nestedField.name() + "_r" + nestedField.fieldId());
-          TypeDescription childType =
-              buildOrcProjection(
-                  nestedField.fieldId(),
-                  nestedField.type(),
-                  isRequired && nestedField.isRequired(),
-                  mapping);
-          orcType.addField(name, childType);
+          OrcField field = mapping.get(nestedField.fieldId());
+          if (field != null) {
+            String name = field.name();
+            TypeDescription childType =
+                buildOrcProjection(
+                    nestedField.fieldId(),
+                    nestedField.type(),
+                    isRequired && nestedField.isRequired(),
+                    mapping);
+            orcType.addField(name, childType);
+          }
         }
         break;
       case LIST:

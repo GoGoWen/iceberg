@@ -19,7 +19,8 @@
 package org.apache.iceberg.orc;
 
 import java.util.List;
-import org.apache.iceberg.relocated.com.google.common.collect.Lists;
+import java.util.Map;
+import org.apache.iceberg.relocated.com.google.common.collect.Maps;
 import org.apache.iceberg.types.Type;
 import org.apache.iceberg.types.Types;
 import org.apache.orc.TypeDescription;
@@ -65,17 +66,25 @@ public abstract class OrcSchemaWithTypeVisitor<T> {
       Types.StructType struct, TypeDescription record, OrcSchemaWithTypeVisitor<T> visitor) {
     List<TypeDescription> fields = record.getChildren();
     List<String> names = record.getFieldNames();
-    List<T> results = Lists.newArrayListWithExpectedSize(fields.size());
+    Map<Integer, T> readersResults = Maps.newHashMap();
     for (TypeDescription field : fields) {
       int fieldId = ORCSchemaUtil.fieldId(field);
       Types.NestedField iField = struct != null ? struct.field(fieldId) : null;
-      results.add(visit(iField != null ? iField.type() : null, field, visitor));
+      readersResults.put(fieldId, visit(iField != null ? iField.type() : null, field, visitor));
     }
-    return visitor.record(struct, record, names, results);
+    return visitor.record(struct, record, names, readersResults);
   }
 
   public T record(
       Types.StructType iStruct, TypeDescription record, List<String> names, List<T> fields) {
+    return null;
+  }
+
+  public T record(
+      Types.StructType iStruct,
+      TypeDescription record,
+      List<String> names,
+      Map<Integer, T> fields) {
     return null;
   }
 

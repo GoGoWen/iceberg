@@ -56,6 +56,13 @@ public class GenericOrcReaders {
     return new StructReader(readers, struct, idToConstant);
   }
 
+  public static OrcValueReader<Record> struct(
+      Map<Integer, OrcValueReader<?>> readers,
+      Types.StructType struct,
+      Map<Integer, ?> idToConstant) {
+    return new StructReader(readers, struct, idToConstant);
+  }
+
   public static OrcValueReader<List<?>> array(OrcValueReader<?> elementReader) {
     return new ListReader(elementReader);
   }
@@ -206,6 +213,14 @@ public class GenericOrcReaders {
 
     protected StructReader(
         List<OrcValueReader<?>> readers,
+        Types.StructType structType,
+        Map<Integer, ?> idToConstant) {
+      super(readers, structType, idToConstant);
+      this.template = structType != null ? GenericRecord.create(structType) : null;
+    }
+
+    protected StructReader(
+        Map<Integer, OrcValueReader<?>> readers,
         Types.StructType structType,
         Map<Integer, ?> idToConstant) {
       super(readers, structType, idToConstant);

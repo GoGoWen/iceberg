@@ -155,11 +155,45 @@ public class OrcValueReaders {
           // in case of any other metadata field, fill with nulls
           this.isConstantOrMetadataField[pos] = true;
           this.readers[pos] = constants(null);
-        } else if (field.hasDefaultValue()) {
-          this.isConstantOrMetadataField[pos] = true;
-          this.readers[pos] = constants(field.getDefaultValue());
         } else {
           this.readers[pos] = readers.get(readerIndex++);
+        }
+      }
+    }
+
+    protected StructReader(
+        Map<Integer, OrcValueReader<?>> readers,
+        Types.StructType struct,
+        Map<Integer, ?> idToConstant) {
+      List<Types.NestedField> fields = struct.fields();
+      this.readers = new OrcValueReader[fields.size()];
+      this.isConstantOrMetadataField = new boolean[fields.size()];
+      for (int pos = 0, readerIndex = 0; pos < fields.size(); pos += 1) {
+        Types.NestedField field = fields.get(pos);
+        if (idToConstant.containsKey(field.fieldId())) {
+          this.isConstantOrMetadataField[pos] = true;
+          this.readers[pos] = constants(idToConstant.get(field.fieldId()));
+        } else if (field.equals(MetadataColumns.ROW_POSITION)) {
+          this.isConstantOrMetadataField[pos] = true;
+          this.readers[pos] = new RowPositionReader();
+        } else if (field.equals(MetadataColumns.IS_DELETED)) {
+          this.isConstantOrMetadataField[pos] = true;
+          this.readers[pos] = constants(false);
+        } else if (MetadataColumns.isMetadataColumn(field.name())) {
+          // in case of any other metadata field, fill with nulls
+          this.isConstantOrMetadataField[pos] = true;
+          this.readers[pos] = constants(null);
+        } else {
+          if (readers.get(field.fieldId()) != null) {
+            this.readers[pos] = readers.get(field.fieldId());
+          } else {
+            if (field.hasDefaultValue()) {
+              this.readers[pos] = constants(field.getDefaultValue());
+            } else {
+              this.readers[pos] = constants(null);
+            }
+            this.isConstantOrMetadataField[pos] = true;
+          }
         }
       }
     }
