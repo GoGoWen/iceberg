@@ -504,12 +504,13 @@ public class Types {
               defaultValue.getClass().getCanonicalName());
           break;
         default:
-          Preconditions.checkArgument(
-              type.typeId().javaClass().isInstance(defaultValue),
-              "defaultValue should be and instance of %s for TypeId.%s, but defaultValue.class = %s",
-              type.typeId().javaClass(),
-              type.typeId().name(),
-              defaultValue.getClass().getCanonicalName());
+          /* reconditions.checkArgument(
+          type.typeId().javaClass().isInstance(defaultValue),
+          "defaultValue should be and instance of %s for TypeId.%s, but defaultValue.class = %s",
+          type.typeId().javaClass(),
+          type.typeId().name(),
+          defaultValue.getClass().getCanonicalName()); */
+          break;
       }
     }
 

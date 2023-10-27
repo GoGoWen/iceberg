@@ -75,6 +75,7 @@ import org.apache.spark.sql.connector.catalog.NamespaceChange;
 import org.apache.spark.sql.connector.catalog.StagedTable;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableCatalog;
+import org.apache.spark.sql.connector.catalog.TableCatalogCapability;
 import org.apache.spark.sql.connector.catalog.TableChange;
 import org.apache.spark.sql.connector.catalog.TableChange.ColumnChange;
 import org.apache.spark.sql.connector.catalog.TableChange.RemoveProperty;
@@ -160,6 +161,11 @@ public class SparkCatalog extends BaseCatalog {
     } catch (org.apache.iceberg.exceptions.NoSuchTableException e) {
       throw new NoSuchTableException(ident);
     }
+  }
+
+  @Override
+  public Set<TableCatalogCapability> capabilities() {
+    return ImmutableSet.of(TableCatalogCapability.SUPPORT_COLUMN_DEFAULT_VALUE);
   }
 
   @Override

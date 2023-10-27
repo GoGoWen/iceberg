@@ -231,7 +231,11 @@ public class Spark3Util {
         leafName(add.fieldNames()));
     Type type = SparkSchemaUtil.convert(add.dataType());
     pendingUpdate.addColumn(
-        parentName(add.fieldNames()), leafName(add.fieldNames()), type, add.comment());
+        parentName(add.fieldNames()),
+        leafName(add.fieldNames()),
+        type,
+        add.comment(),
+        add.defaultValue() != null ? add.defaultValue().getValue().value() : null);
 
     if (add.position() instanceof TableChange.After) {
       TableChange.After after = (TableChange.After) add.position();
